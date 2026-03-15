@@ -1,0 +1,17 @@
+[project]
+name = "triton-lab"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+<<<<<<< HEAD
+    "matplotlib>=3.10.8",
+    "numpy>=2.4.2",
+    "pandas>=3.0.0",
+=======
+    "numpy>=2.4.2",
+>>>>>>> 13f2e3bb13e5dd1898c513d166b268e8a1daf7d7
+    "torch>=2.10.0",
+    "triton>=3.6.0",
+]
