@@ -26,6 +26,7 @@ My GPU kernel development repo. I write kernels from scratch in both CUDA and Tr
 | **Regularization** | Seeded Dropout (2D) | | [.py](05-regularization/triton/seeded_dropout_modern.py) | 2D grid launch, per-row dropout rates, 2D random offset indexing |
 | **Image** | 2D Box Blur | [.cu](06-image-processing/cuda/box_blur_2d.cu) | | Shared memory halo loading (edges + corners), 3x3 stencil, real image demo |
 | **Streams** | Multi-Stream Async | [.py](07-async-streams/cuda/host_async.py) | | Split-array concurrency, `intptr_t` bridge, raw pointer offset arithmetic |
+| **Integration** | PyTorch Inline Extensions | All `*_inline.py` | | `load_inline`, C++ bridge functions, `data_ptr<float>()`, JIT compilation |
 
 ---
 
