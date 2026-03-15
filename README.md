@@ -8,24 +8,24 @@ My GPU kernel development repo. I write kernels from scratch in both CUDA and Tr
 
 | Concept | Kernel | CUDA | Triton | Key Techniques |
 |---|---|---|---|---|
-| **Basics** | Hello World | [hello_cuda.cu](00-basics/cuda/hello_cuda.cu) | | Grid/block launch, `cudaDeviceSynchronize`, device `printf` |
-| **Basics** | Vector Addition | | [vector_addition.py](00-basics/triton/vector_addition.py) | `tl.program_id`, pointer arithmetic, masking, benchmarking |
-| **Basics** | 1D/2D Element-wise Ops | | [1d_2d_matrix.py](00-basics/triton/1d_2d_matrix.py) | 1D vs 2D grid launch, `tl.constexpr` branching, strides |
-| **MatMul** | Naive | [naive.cu](01-matmul/cuda/naive.cu) | | One thread per output, 2D indexing, boundary checks |
-| **MatMul** | Shared Memory Tiled | [tiled.cu](01-matmul/cuda/tiled.cu) | | `__shared__` 32x32 tiles, `__syncthreads`, K-loop |
-| **MatMul** | Vectorized (float4) | [float4_vectorized_inline.py](01-matmul/cuda/float4_vectorized_inline.py) | | `reinterpret_cast<float4*>`, B-transpose, 128-bit loads |
-| **MatMul** | Vectorized + Padded | [float4_vectorized_padded_inline.py](01-matmul/cuda/float4_vectorized_padded_inline.py) | | Padding non-aligned dims to multiples of 4, slice-back |
-| **MatMul** | 2D Register Block Tiling | [blocktiling_2d.cu](01-matmul/cuda/blocktiling_2d.cu) | | BM=128, BN=128, BK=8, 8x8 register accumulators, 256 threads |
-| **MatMul** | Grouped Tiling | | [matrix_mult.py](01-matmul/triton/matrix_mult.py) | `GROUP_SIZE_M`, L2 cache locality, `tl.dot` accumulator |
-| **Reductions** | Row Sum | [row_sum.cu](02-reductions/cuda/row_sum.cu) | | `__shfl_down_sync`, warp->shared->warp staged reduction |
-| **Reductions** | Softmax | [softmax.cu](02-reductions/cuda/softmax.cu) | [softmax.py](02-reductions/triton/softmax.py) | Fused max-exp-sum-div, `atomicMax`, warp reduce (CUDA) vs `tl.max`/`tl.sum` (Triton) |
-| **Normalization** | Layer Norm | | [layer_normalization.py](03-normalization/triton/layer_normalization.py) | Fwd + bwd fused, mean/var/rstd, `atomic_cas` locking for dW/dB |
-| **Normalization** | Persistent RMSNorm | | [persistent_rmsnorm.py](03-normalization/triton/persistent_rmsnorm.py) | Persistent kernel pattern, grid-stride loop, `tl.num_programs` |
-| **Attention** | Flash Attention | | [flash_attention.py](04-attention/triton/flash_attention.py) | Causal masking, online softmax, `tl.make_block_ptr`, multi-stage |
-| **Regularization** | Seeded Dropout (simple) | | [seeded_dropout_simple.py](05-regularization/triton/seeded_dropout_simple.py) | `tl.rand`, per-row seeds, inverted dropout scaling |
-| **Regularization** | Seeded Dropout (2D) | | [seeded_dropout_modern.py](05-regularization/triton/seeded_dropout_modern.py) | 2D grid, per-row dropout rates, 2D random offsets |
-| **Image** | 2D Box Blur | [box_blur_2d.cu](06-image-processing/cuda/box_blur_2d.cu) | | Shared memory halo (edges + corners), 3x3 stencil, real image demo |
-| **Streams** | Multi-Stream Async | [host_async.py](07-async-streams/cuda/host_async.py) | | Split-array concurrency, `intptr_t` bridge, raw pointer offset |
+| **Basics** | Hello World | [.cu](00-basics/cuda/hello_cuda.cu) | | Grid/block launch, `cudaDeviceSynchronize`, device `printf` |
+| **Basics** | Vector Addition | | [.py](00-basics/triton/vector_addition.py) | `tl.program_id`, pointer arithmetic, masking, benchmarking |
+| **Basics** | 1D/2D Element-wise | | [.py](00-basics/triton/1d_2d_matrix.py) | 1D vs 2D grid launch, `tl.constexpr` branching, strides |
+| **MatMul** | Naive | [.cu](01-matmul/cuda/naive.cu) | | One thread per output, 2D indexing, boundary checks |
+| **MatMul** | Tiled | [.cu](01-matmul/cuda/tiled.cu) | | `__shared__` 32x32 tiles, `__syncthreads`, tile-loop over K |
+| **MatMul** | float4 Vectorized | [.py](01-matmul/cuda/float4_vectorized_inline.py) | | `reinterpret_cast<float4*>`, B-transpose, 128-bit coalesced loads |
+| **MatMul** | float4 + Padded | [.py](01-matmul/cuda/float4_vectorized_padded_inline.py) | | Padding non-aligned dims to multiples of 4, post-kernel slice-back |
+| **MatMul** | 2D Block Tiling | [.cu](01-matmul/cuda/blocktiling_2d.cu) | | BM=128, BN=128, BK=8, 8x8 register accumulators, 256 threads per block |
+| **MatMul** | Grouped Tiling | | [.py](01-matmul/triton/matrix_mult.py) | `GROUP_SIZE_M` for L2 cache locality, `tl.dot` accumulator, stride-based pointers |
+| **Reductions** | Row Sum | [.cu](02-reductions/cuda/row_sum.cu) | | `__shfl_down_sync`, warp->shared->warp staged reduction, no atomics |
+| **Reductions** | Softmax | [.cu](02-reductions/cuda/softmax.cu) | [.py](02-reductions/triton/softmax.py) | Fused max-exp-sum-div, `atomicMax` + warp reduce (CUDA) vs `tl.max`/`tl.sum` (Triton) |
+| **Normalization** | Layer Norm | | [.py](03-normalization/triton/layer_normalization.py) | Fwd + bwd fused kernels, mean/var/rstd, `atomic_cas` locking for dW/dB |
+| **Normalization** | Persistent RMSNorm | | [.py](03-normalization/triton/persistent_rmsnorm.py) | Persistent kernel pattern, grid-stride while-loop, `tl.num_programs` |
+| **Attention** | Flash Attention | | [.py](04-attention/triton/flash_attention.py) | Causal masking, online softmax, `tl.make_block_ptr`, multi-stage inner loop |
+| **Regularization** | Seeded Dropout (1D) | | [.py](05-regularization/triton/seeded_dropout_simple.py) | `tl.rand`, per-row seeds, inverted dropout scaling |
+| **Regularization** | Seeded Dropout (2D) | | [.py](05-regularization/triton/seeded_dropout_modern.py) | 2D grid launch, per-row dropout rates, 2D random offset indexing |
+| **Image** | 2D Box Blur | [.cu](06-image-processing/cuda/box_blur_2d.cu) | | Shared memory halo loading (edges + corners), 3x3 stencil, real image demo |
+| **Streams** | Multi-Stream Async | [.py](07-async-streams/cuda/host_async.py) | | Split-array concurrency, `intptr_t` bridge, raw pointer offset arithmetic |
 
 ---
 
